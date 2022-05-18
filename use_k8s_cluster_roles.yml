@@ -1,0 +1,9 @@
+- name: use the k8s cluster master role
+  hosts: localhost
+  roles:
+    - ansible_kubernetes_master_role 
+
+- name: use the k8s cluster worker role
+  hosts: 20.231.229.168
+  roles:
+    - ansible_kubernetes_worker_role 

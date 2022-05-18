@@ -1,0 +1,100 @@
+---
+# tasks file for k8s_slave
+- name: Installing Python Packages.
+  apt: 
+    name:
+      - python3-pip
+
+- name: Ensure boto and boto3 modules are installed
+  pip:
+    name: "{{ item }}"
+  with_items:
+    - boto3
+    - botocore
+
+- name: Add Docker GPG apt Key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker Repository
+  apt_repository:
+    repo: deb https://download.docker.com/linux/ubuntu focal stable
+    state: present
+
+- name: Update apt and install docker-ce
+  apt:
+    name: docker-ce
+    state: latest
+    update_cache: true
+
+- name: Install Docker Module for Python
+  pip:
+    name: docker
+
+- name: Disable swap since kubernetes can't work with swap enabled
+  command: swapoff -a
+
+- name: Disable swap permanently, persist reboots
+  replace:
+    path: /etc/fstab
+    regexp: '^(\s*)([^#\n]+\s+)(\w+\s+)swap(\s+.*)$'
+    replace: '#\1\2\3swap\4'
+    backup: yes
+
+- name: Add Kubernetes apt key
+  apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+    keyring: /usr/share/keyrings/kubernetes-archive-keyring.gpg
+
+- name: Add Kubernetes Repository
+  ansible.builtin.apt_repository:
+    repo: deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
+    state: present
+    filename: kubernetes.list
+
+- name: Installing Kubernetes Cluster Packages.
+  apt: 
+    name:
+      - kubeadm
+      - kubectl
+      - kubelet
+    state: present
+
+- name: Enabling docker and kubelet services
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop:
+    - kubelet
+    - docker
+
+- name: Copying content of the daemon.json file
+  copy:
+    dest: /etc/docker/daemon.json
+    src: daemon.json
+  notify: restart docker service
+
+- meta: flush_handlers
+
+- name: Copying k8s.conf file
+  copy:
+    dest: /etc/sysctl.d/k8s.conf
+    src: k8s.conf
+
+- name: Refreshing sysctl
+  shell: "sysctl --system"
+
+- name: Refreshing kubeadm reset
+  shell: "kubeadm reset --force --cri-socket=/var/run/containerd/containerd.sock"
+  register: reset_cluster
+  
+#- name: joining slaves with the master
+# command: "{{ hostvars[item]['kubeadm_join_command']['stdout'] }}"
+# with_items: "{{ groups['localhost'] }}"
+  #with_items: "{{ groups['20.231.229.168'] }}"
+  # ignore_errors: yes
+- name: test joining 
+  shell: "{{hostvars['localhost'].kubeadm_join_command.stdout}}"
