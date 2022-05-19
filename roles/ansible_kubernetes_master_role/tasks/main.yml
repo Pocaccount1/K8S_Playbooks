@@ -1,6 +1,6 @@
 ---
   hosts: localhost
-  remote_user: CAadmin
+  remote_user: root
   become: true
 - name: Add Docker GPG apt Key
   apt_key:
