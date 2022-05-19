@@ -1,13 +1,4 @@
 ---
-# tasks file for k8s-master
-# - name: install docker
-#   package:
-#     name: "{{ item }}"
-#     state: present
-#   loop: 
-#     - docker
-#     #- iproute-tc
-- name: playbook task
   hosts: localhost
   remote_user: CAadmin
   become: true
