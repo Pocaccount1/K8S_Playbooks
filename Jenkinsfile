@@ -6,6 +6,6 @@ stage('checkout') {
 
 stage('k8s deploy') {
    sh "ls"
-   sh "sudo ansible-playbook use_k8s_cluster_roles.yml"
+   sh "ansible-playbook use_k8s_cluster_roles.yml"
     }
 }
