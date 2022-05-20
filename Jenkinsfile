@@ -9,6 +9,6 @@ stage('k8s deploy') {
   sh "who -H"
  sh "cd /etc/ansible/"
   sh "pwd"
-   sh "ansible-playbook use_k8s_cluster_roles.yml"
+   sh "ansible-playbook use_k8s_cluster_roles.yml -e "ansible_become_password=Passw0rd@123""
     }
 }
